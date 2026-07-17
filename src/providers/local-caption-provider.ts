@@ -21,7 +21,7 @@ export class LocalCaptionProvider implements CaptionProvider {
 function isCaptionResponse(value: unknown): value is CaptionResponse {
   if (!value || typeof value !== "object") return false;
   const result = value as Record<string, unknown>;
-  return typeof result.caption === "string" && result.caption.trim().length > 0 && result.caption.length <= 500 && typeof result.confidence === "number" && Number.isFinite(result.confidence) && result.confidence >= 0 && result.confidence <= 1 && (result.model === undefined || typeof result.model === "string");
+  return typeof result.caption === "string" && result.caption.trim().length > 0 && result.caption.length <= 500 && typeof result.confidence === "number" && Number.isFinite(result.confidence) && result.confidence >= 0 && result.confidence <= 1 && (result.confidenceSource === undefined || result.confidenceSource === "provider" || result.confidenceSource === "heuristic") && (result.confidenceReasons === undefined || (Array.isArray(result.confidenceReasons) && result.confidenceReasons.every((reason) => typeof reason === "string"))) && (result.model === undefined || typeof result.model === "string");
 }
 function errorMessage(value: unknown): string | undefined {
   if (!value || typeof value !== "object") return undefined;

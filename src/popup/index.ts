@@ -19,7 +19,14 @@ function render(images: ImageRecord[], available: boolean): void {
     button.disabled = true; button.textContent = "Generating…";
     const result = await chrome.runtime.sendMessage({ type: "captionUrl", src: button.dataset.src, force: true }) as CachedCaption & { error?: string };
     const target = button.parentElement!.querySelector<HTMLElement>(".result")!;
-    target.textContent = result.error ? result.error : `${result.caption}（${result.confidence.toFixed(2)}）`;
+    if (result.error) {
+      target.textContent = result.error;
+    } else {
+      const settings = await getSettings();
+      const source = result.confidenceSource === "heuristic" ? "heuristic estimate" : "provider confidence";
+      target.textContent = result.caption + "\n" + confidenceMessage(result.confidence, settings) + " (" + source + ")";
+      target.title = result.confidenceReasons?.join(" ") ?? "";
+    }
     button.textContent = "Generate again"; button.disabled = false;
   });
   if (!available) document.querySelectorAll<HTMLButtonElement>("[data-src]").forEach((button) => button.disabled = true);

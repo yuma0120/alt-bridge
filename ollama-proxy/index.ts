@@ -1,4 +1,5 @@
 import express from "express";
+import { estimateCaptionConfidence } from "./confidence";
 import { parseMultipart } from "../server-utils/multipart";
 
 const app = express();
@@ -43,8 +44,10 @@ app.post("/caption", express.raw({ type: () => true, limit: "10mb" }), async (re
       return response.status(unavailable ? 422 : 503).json({ error: { code: unavailable ? "UNSUPPORTED_MODEL" : "MODEL_UNAVAILABLE", message: detail } });
     }
     if (typeof result.message?.content !== "string" || !result.message.content.trim()) return response.status(422).json({ error: { code: "CAPTION_UNAVAILABLE", message: "Ollama did not return a description." } });
-    console.log(`[${requestId}] Ollama returned a ${result.message.content.trim().length}-character caption.`);
-    return response.json({ caption: result.message.content.trim().slice(0, 500), confidence: 0.7, model });
+    const caption = result.message.content.trim().slice(0, 500);
+    const reliability = estimateCaptionConfidence(caption);
+    console.log(`[${requestId}] Ollama returned a ${caption.length}-character caption with heuristic reliability ${reliability.confidence}.`);
+    return response.json({ caption, confidence: reliability.confidence, confidenceSource: "heuristic", confidenceReasons: reliability.confidenceReasons, model });
   } catch {
     console.error(`[${requestId}] Unable to connect to Ollama at ${ollamaUrl}.`);
     return response.status(503).json({ error: { code: "MODEL_UNAVAILABLE", message: "Unable to connect to Ollama." } });

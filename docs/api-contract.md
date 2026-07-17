@@ -32,6 +32,8 @@ Return `200 OK`.
 {
   "caption": "A red bicycle is parked in front of a building.",
   "confidence": 0.82,
+  "confidenceSource": "heuristic",
+  "confidenceReasons": ["The response includes concrete visual details."],
   "model": "example-captioner-1"
 }
 ```
@@ -40,9 +42,13 @@ Return `200 OK`.
 | --- | --- | --- | --- |
 | `caption` | string | Yes | 1–500 characters after trimming. |
 | `confidence` | number | Yes | A finite number from 0.0 through 1.0. |
+| `confidenceSource` | string | No | `provider` for a model-supplied score, or `heuristic` for a response-quality estimate. |
+| `confidenceReasons` | string[] | No | Human-readable signals used by a heuristic estimate. |
 | `model` | string | No | Actual model name, 1–100 characters. |
 
 The extension ignores unknown fields. Missing or invalid required fields are treated as an invalid server response.
+
+Ollama does not provide a confidence score. Its proxy returns `confidenceSource: "heuristic"` and estimates response reliability from observable response patterns. This is not a measure of image-caption accuracy.
 
 ### Error response
 
