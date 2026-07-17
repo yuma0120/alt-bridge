@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
-    "mock-server": "tsx mock-server/index.ts"
+    "mock-server": "tsx mock-server/index.ts",
+    "ollama-proxy": "tsx ollama-proxy/index.ts"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.276",

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "AltBridge",
   "version": "0.1.0",
-  "description": "元のalt属性を変えずに、画像の説明をローカルAIで補助します。",
+  "description": "Generate local AI-assisted image descriptions without changing existing alt text.",
   "permissions": ["activeTab", "storage", "contextMenus"],
   "host_permissions": ["<all_urls>"],
   "action": {

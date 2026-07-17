@@ -1,19 +1,19 @@
 import type { ImageCategory, ImageRecord } from "../shared/types";
 
-const genericAlt = /^(image|img|photo|picture|画像|写真)$/i;
-const filenameAlt = /(^|\\s)(img|image|photo)[_-]?\\d*|\\.(jpe?g|png|gif|webp|avif)$/i;
+const genericAlt = /^(image|img|photo|picture)$/i;
+const filenameAlt = /(^|\s)(img|image|photo)[_-]?\d*|\.(jpe?g|png|gif|webp|avif)$/i;
 const urlAlt = /^(https?:|data:)/i;
 
 function categoryFor(image: HTMLImageElement): Pick<ImageRecord, "category" | "reason"> {
   const alt = image.getAttribute("alt");
   const role = image.getAttribute("role");
-  if (role === "presentation" || image.getAttribute("aria-hidden") === "true") return { category: "excluded", reason: "装飾目的として明示されています" };
-  if (image.closest("svg") || image.src.includes("favicon")) return { category: "excluded", reason: "SVGまたはfaviconです" };
-  if (image.naturalWidth <= 16 && image.naturalHeight <= 16) return { category: "excluded", reason: "極小アイコンです" };
-  if (alt === null) return { category: "missing-alt", reason: "alt属性がありません" };
-  if (alt === "") return { category: "empty-alt", reason: "装飾目的の可能性があります" };
-  if (alt.length < 3 || genericAlt.test(alt) || filenameAlt.test(alt) || urlAlt.test(alt)) return { category: "suspicious-alt", reason: "内容を説明していない可能性があります" };
-  return { category: "valid-alt", reason: "alt属性があります" };
+  if (role === "presentation" || image.getAttribute("aria-hidden") === "true") return { category: "excluded", reason: "Explicitly marked as decorative" };
+  if (image.closest("svg") || image.src.includes("favicon")) return { category: "excluded", reason: "SVG or favicon" };
+  if (image.naturalWidth <= 16 && image.naturalHeight <= 16) return { category: "excluded", reason: "Very small icon" };
+  if (alt === null) return { category: "missing-alt", reason: "No alt attribute" };
+  if (alt === "") return { category: "empty-alt", reason: "May be intentionally decorative" };
+  if (alt.length < 3 || genericAlt.test(alt) || filenameAlt.test(alt) || urlAlt.test(alt)) return { category: "suspicious-alt", reason: "May not describe the image" };
+  return { category: "valid-alt", reason: "Alt attribute present" };
 }
 
 function recordFor(image: HTMLImageElement, index: number): ImageRecord {

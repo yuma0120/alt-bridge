@@ -1,12 +1,10 @@
-# ローカルAIサーバー API 契約（MVP）
+# Local AI Server API Contract (MVP)
 
-AltBridge 拡張機能とローカルAI推論サーバーの結合を安定させるため、MVPでは本書の契約を固定する。
+This document fixes the MVP contract between AltBridge and a local image-captioning server.
 
 ## `POST /caption`
 
-画像の説明文を生成する。
-
-### リクエスト
+Generate a description for one image.
 
 ```http
 POST /caption
@@ -14,85 +12,93 @@ Content-Type: multipart/form-data
 Accept: application/json
 ```
 
-| フィールド | 型 | 必須 | 説明 |
+### Request fields
+
+| Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `image` | File | はい | PNG、JPEG、WebP等の画像ファイル |
-| `prompt` | string | いいえ | 説明生成用プロンプト。未指定時は拡張機能側で定めたデフォルトプロンプトを利用する。 |
-| `maxSize` | string（整数） | いいえ | 画像の最大辺（px）。拡張機能側が送信前にリサイズするため、サーバー側では参考情報として扱う。 |
-| `requestId` | string | いいえ | クライアント・サーバー間のログ照合および結合テストに使う相関ID。 |
+| `image` | File | Yes | An image such as PNG, JPEG, or WebP. |
+| `prompt` | string | No | Captioning prompt. The extension supplies its default prompt when none is configured. |
+| `maxSize` | string (integer) | No | Maximum image edge in pixels. The extension resizes before upload; the server may treat this as informational. |
+| `requestId` | string | No | Correlation ID for logs and integration tests. |
+| `model` | string | No | Requested inference model. The server chooses its default when omitted. |
 
-サーバー固有のプロンプト指定形式はMVPに持ち込まない。プロンプトは常に `prompt` テキストフィールドで渡す。
+The MVP uses `prompt` as the only prompt field. Server-specific prompt formats are out of scope.
 
-### 成功レスポンス
+### Successful response
 
-HTTPステータスは `200 OK` とする。
+Return `200 OK`.
 
 ```json
 {
-  "caption": "赤い自転車が建物の前に置かれている。",
+  "caption": "A red bicycle is parked in front of a building.",
   "confidence": 0.82,
   "model": "example-captioner-1"
 }
 ```
 
-| フィールド | 型 | 必須 | 制約 |
+| Field | Type | Required | Constraints |
 | --- | --- | --- | --- |
-| `caption` | string | はい | 前後空白を除いて1〜500文字 |
-| `confidence` | number | はい | 有限数値かつ `0.0`〜`1.0` |
-| `model` | string | いいえ | 使用モデル名。1〜100文字 |
+| `caption` | string | Yes | 1–500 characters after trimming. |
+| `confidence` | number | Yes | A finite number from 0.0 through 1.0. |
+| `model` | string | No | Actual model name, 1–100 characters. |
 
-拡張機能は未知のフィールドを無視する。必須フィールドの欠落または制約違反は、サーバー応答形式エラーとして表示する。
+The extension ignores unknown fields. Missing or invalid required fields are treated as an invalid server response.
 
-### エラーレスポンス
-
-エラー時は次の形式を返す。
+### Error response
 
 ```json
 {
   "error": {
     "code": "INVALID_IMAGE",
-    "message": "画像を読み込めませんでした。"
+    "message": "The image could not be read."
   }
 }
 ```
 
-MVPで扱う主なステータスコードは以下のとおり。
-
-| HTTPステータス | `error.code` の例 | 用途 |
+| HTTP status | `error.code` | Meaning |
 | --- | --- | --- |
-| `400` | `INVALID_IMAGE` | リクエストまたは画像ファイルが不正 |
-| `413` | `IMAGE_TOO_LARGE` | 画像サイズが上限を超過 |
-| `415` | `UNSUPPORTED_MEDIA_TYPE` | 未対応の画像形式 |
-| `422` | `CAPTION_UNAVAILABLE` | 画像を推論できない |
-| `500` | `INTERNAL_ERROR` | サーバー内部エラー |
-| `503` | `MODEL_UNAVAILABLE` | モデルが未準備または利用不可 |
+| `400` | `INVALID_IMAGE` | Invalid request or image file. |
+| `413` | `IMAGE_TOO_LARGE` | Image exceeds the size limit. |
+| `415` | `UNSUPPORTED_MEDIA_TYPE` | Unsupported image format. |
+| `422` | `CAPTION_UNAVAILABLE` | The image cannot be captioned. |
+| `422` | `UNSUPPORTED_MODEL` | The requested model is unavailable on the server. |
+| `500` | `INTERNAL_ERROR` | Server-side failure. |
+| `503` | `MODEL_UNAVAILABLE` | The model is not ready or the server is unavailable. |
 
-## 開発用モックサーバー
+## Model selection
 
-フロントエンドと実際の推論サーバーを並行開発するため、Express製のモックサーバーを用意する。モックは `POST /caption` に対して有効なダミー画像説明とconfidenceを返し、`GET /health` で疎通確認を提供する。
+`LocalCaptionProvider` does not depend on a particular inference backend or model. The supplied Ollama proxy defaults to `llava:7b` and can use other compatible vision models such as `moondream` or `bakllava`; any local implementation may be used as long as it follows this contract.
+
+- Set the optional request `model` field to request a model.
+- Return the actual model through the optional response `model` field.
+- Return `422 UNSUPPORTED_MODEL` when the requested model cannot be used.
+- The extension saves an optional model name in Settings. An empty value means “use the server default.”
+
+## Development mock server
+
+The Express mock server allows the extension and a real inference server to be developed in parallel. It exposes `POST /caption` and `GET /health`.
 
 ### `X-Mock-Confidence`
 
-モックサーバーだけが受け付ける開発・テスト用ヘッダー。実際のローカルAIサーバーの契約には含めない。
+This development-only header is accepted by the mock server and is not part of the real local-server contract.
 
 ```http
 X-Mock-Confidence: 0.3
 ```
 
-- ヘッダー未指定時の `confidence` は `0.82`。
-- 指定時は、有限数値かつ `0.0`〜`1.0` の値であればレスポンスの `confidence` を上書きする。
-- 値が不正な場合は `400 Bad Request` と `INVALID_MOCK_CONFIDENCE` を返す。
+- Without the header, the mock returns `confidence: 0.82`.
+- With a finite value from 0.0 through 1.0, the mock returns that value as `confidence`.
+- An invalid value returns `400 INVALID_MOCK_CONFIDENCE`.
+- A supplied multipart `model` field is echoed in the mock response.
 
-このヘッダーにより、UIのconfidence表示を高・中・低それぞれで結合テストできる。分類境界そのものは、拡張機能側のconfidence変換関数のユニットテストで網羅する。
+Use this header to exercise low, medium, and high confidence UI states in integration tests. Cover exact confidence boundaries with unit tests.
 
 ### `GET /health`
 
-モックおよび実際のローカルAIサーバーは、可能であれば次の疎通確認エンドポイントを提供する。
+The mock server and production local server should return:
 
 ```json
-{
-  "status": "ok"
-}
+{ "status": "ok" }
 ```
 
-拡張機能は疎通失敗時、キャプション生成・alt評価の操作を無効化し、ローカルAIサーバーのセットアップガイドへの導線を表示する。
+When the health check fails, the extension disables captioning controls and guides the user to local-server setup.

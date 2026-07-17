@@ -1,31 +1,40 @@
 # AltBridge
 
-## 概要
+AltBridge generates optional, AI-assisted image descriptions without changing the original page, its HTML, or existing `alt` attributes.
 
-元のドキュメントを一切変更せずに、Web上の画像に対してAIによる補助的な説明（代替テキスト案）を生成します。
+## Run the MVP
 
-## MVPの起動方法
-
-Node.js 22以降で依存関係をインストールします。
+Install dependencies with Node.js 22 or later.
 
 ```bash
 npm install
-npm run mock-server
 ```
 
-別のターミナルでビルドします。
+For normal use with Ollama, download a vision model and start the local proxy.
+
+```bash
+ollama pull llava:7b
+npm run ollama-proxy
+```
+
+Build the extension in another terminal.
 
 ```bash
 npm run build
 ```
 
-ChromeまたはEdgeの拡張機能管理画面でデベロッパーモードを有効にし、生成された`dist`ディレクトリを「パッケージ化されていない拡張機能を読み込む」から読み込みます。初期設定では `http://127.0.0.1:8787` のモックサーバーに接続します。
+Enable Developer mode in the Chrome or Edge extensions page, then choose **Load unpacked** and select `dist`. The default endpoint is the Ollama proxy at `http://127.0.0.1:8788`.
 
-画像は明示的に「AI説明を生成」を押したときだけローカルサーバーへ送られます。alt属性とページDOMを変更することはありません。
+Images are sent to the local server only after the user explicitly selects **Generate AI description**. AltBridge never changes page DOM or `alt` attributes.
 
-APIとモック用の`X-Mock-Confidence`ヘッダーは [API契約書](./docs/api-contract.md) を参照してください。
+The model name is optional in Settings. When it is empty, the proxy uses its default model (`llava:7b`); a supplied name is passed to Ollama as-is. The proxy sends images through Ollama’s structured `/api/chat` message format.
 
+While the Ollama proxy is running, every caption request is logged with its request ID, model, image byte size, and media type. To inspect the exact in-memory image sent to Ollama, open [http://127.0.0.1:8788/debug/last-image](http://127.0.0.1:8788/debug/last-image). This debug image is replaced by the next request and is cleared when the proxy stops.
 
-## ライセンス
+For development only, start the mock server with `npm run mock-server`. It listens on `http://127.0.0.1:8787`; change the endpoint in Settings to use it.
 
-本プロジェクトは MIT License の下で公開されています。詳細は [LICENSE](./LICENSE) を参照してください。
+See the [API contract](./docs/api-contract.md) for the local-server protocol and the mock-only `X-Mock-Confidence` header.
+
+## License
+
+This project is released under the [MIT License](./LICENSE).

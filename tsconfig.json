@@ -10,5 +10,5 @@
     "types": ["chrome", "vitest/globals"],
     "skipLibCheck": true
   },
-  "include": ["src", "mock-server", "vite.config.ts"]
+  "include": ["src", "mock-server", "ollama-proxy", "server-utils", "vite.config.ts"]
 }
