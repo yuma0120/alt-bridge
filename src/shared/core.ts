@@ -15,7 +15,7 @@ export const DEFAULT_SETTINGS: Settings = {
   prompt: DEFAULT_PROMPT,
   maxSize: 1600,
   lowConfidenceThreshold: 0.4,
-  highConfidenceThreshold: 0.7
+  highConfidenceThreshold: 0.7,
 };
 
 /**
@@ -26,7 +26,7 @@ export const DEFAULT_SETTINGS: Settings = {
 export async function getSettings(): Promise<Settings> {
   const [syncData, localData] = await Promise.all([
     chrome.storage.sync.get(SETTINGS_KEY),
-    chrome.storage.local.get("authToken")
+    chrome.storage.local.get("authToken"),
   ]);
   const saved = syncData[SETTINGS_KEY] as Partial<Settings> | undefined;
   const authToken = typeof localData.authToken === "string" ? localData.authToken : "";
@@ -44,7 +44,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
   const { authToken, ...syncSettings } = settings;
   await Promise.all([
     chrome.storage.sync.set({ [SETTINGS_KEY]: syncSettings }),
-    chrome.storage.local.set({ authToken })
+    chrome.storage.local.set({ authToken }),
   ]);
 }
 

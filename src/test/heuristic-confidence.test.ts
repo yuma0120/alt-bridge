@@ -7,6 +7,8 @@ describe("estimateCaptionConfidence", () => {
   });
 
   it("rewards concrete visual detail without claiming provider confidence", () => {
-    expect(estimateCaptionConfidence("A red car is parked beside a tree on a city street.").confidence).toBeGreaterThan(0.65);
+    expect(estimateCaptionConfidence("A red car is parked beside a tree on a city street.").confidence).toBeGreaterThan(
+      0.65,
+    );
   });
 });

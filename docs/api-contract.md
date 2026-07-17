@@ -14,13 +14,13 @@ Accept: application/json
 
 ### Request fields
 
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| `image` | File | Yes | An image such as PNG, JPEG, or WebP. |
-| `prompt` | string | No | Captioning prompt. The extension supplies its default prompt when none is configured. |
-| `maxSize` | string (integer) | No | Maximum image edge in pixels. The extension resizes before upload; the server may treat this as informational. |
-| `requestId` | string | No | Correlation ID for logs and integration tests. |
-| `model` | string | No | Requested inference model. The server chooses its default when omitted. |
+| Field       | Type             | Required | Description                                                                                                    |
+| ----------- | ---------------- | -------- | -------------------------------------------------------------------------------------------------------------- |
+| `image`     | File             | Yes      | An image such as PNG, JPEG, or WebP.                                                                           |
+| `prompt`    | string           | No       | Captioning prompt. The extension supplies its default prompt when none is configured.                          |
+| `maxSize`   | string (integer) | No       | Maximum image edge in pixels. The extension resizes before upload; the server may treat this as informational. |
+| `requestId` | string           | No       | Correlation ID for logs and integration tests.                                                                 |
+| `model`     | string           | No       | Requested inference model. The server chooses its default when omitted.                                        |
 
 The MVP uses `prompt` as the only prompt field. Server-specific prompt formats are out of scope.
 
@@ -38,13 +38,13 @@ Return `200 OK`.
 }
 ```
 
-| Field | Type | Required | Constraints |
-| --- | --- | --- | --- |
-| `caption` | string | Yes | 1–500 characters after trimming. |
-| `confidence` | number | Yes | A finite number from 0.0 through 1.0. |
-| `confidenceSource` | string | No | `provider` for a model-supplied score, or `heuristic` for a response-quality estimate. |
-| `confidenceReasons` | string[] | No | Human-readable signals used by a heuristic estimate. |
-| `model` | string | No | Actual model name, 1–100 characters. |
+| Field               | Type     | Required | Constraints                                                                            |
+| ------------------- | -------- | -------- | -------------------------------------------------------------------------------------- |
+| `caption`           | string   | Yes      | 1–500 characters after trimming.                                                       |
+| `confidence`        | number   | Yes      | A finite number from 0.0 through 1.0.                                                  |
+| `confidenceSource`  | string   | No       | `provider` for a model-supplied score, or `heuristic` for a response-quality estimate. |
+| `confidenceReasons` | string[] | No       | Human-readable signals used by a heuristic estimate.                                   |
+| `model`             | string   | No       | Actual model name, 1–100 characters.                                                   |
 
 The extension ignores unknown fields. Missing or invalid required fields are treated as an invalid server response.
 
@@ -61,19 +61,24 @@ Ollama does not provide a confidence score. Its proxy returns `confidenceSource:
 }
 ```
 
-| HTTP status | `error.code` | Meaning |
-| --- | --- | --- |
-| `400` | `INVALID_IMAGE` | Invalid request or image file. |
-| `413` | `IMAGE_TOO_LARGE` | Image exceeds the size limit. |
-| `415` | `UNSUPPORTED_MEDIA_TYPE` | Unsupported image format. |
-| `422` | `CAPTION_UNAVAILABLE` | The image cannot be captioned. |
-| `422` | `UNSUPPORTED_MODEL` | The requested model is unavailable on the server. |
-| `500` | `INTERNAL_ERROR` | Server-side failure. |
-| `503` | `MODEL_UNAVAILABLE` | The model is not ready or the server is unavailable. |
+| HTTP status | `error.code`             | Meaning                                              |
+| ----------- | ------------------------ | ---------------------------------------------------- |
+| `400`       | `INVALID_IMAGE`          | Invalid request or image file.                       |
+| `413`       | `IMAGE_TOO_LARGE`        | Image exceeds the size limit.                        |
+| `415`       | `UNSUPPORTED_MEDIA_TYPE` | Unsupported image format.                            |
+| `422`       | `CAPTION_UNAVAILABLE`    | The image cannot be captioned.                       |
+| `422`       | `UNSUPPORTED_MODEL`      | The requested model is unavailable on the server.    |
+| `500`       | `INTERNAL_ERROR`         | Server-side failure.                                 |
+| `503`       | `MODEL_UNAVAILABLE`      | The model is not ready or the server is unavailable. |
+| `401`       | `UNAUTHORIZED`           | A valid bearer token is required.                    |
+
+## LAN authentication
+
+A LAN server may require `Authorization: Bearer <token>` on both `/caption` and `/health`. The supplied Ollama proxy enables this check when its `AUTH_TOKEN` environment variable is set. AltBridge requires a token and explicit user consent before it uses a non-loopback endpoint.
 
 ## Model selection
 
-`LocalCaptionProvider` does not depend on a particular inference backend or model. The supplied Ollama proxy defaults to `llava:7b` and can use other compatible vision models such as `moondream` or `bakllava`; any local implementation may be used as long as it follows this contract.
+`LocalCaptionProvider` does not depend on a particular inference backend or model. The supplied Ollama proxy defaults to `gemma3:4b` and can use other compatible vision models; any local implementation may be used as long as it follows this contract.
 
 - Set the optional request `model` field to request a model.
 - Return the actual model through the optional response `model` field.

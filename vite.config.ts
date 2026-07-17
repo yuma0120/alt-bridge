@@ -15,10 +15,10 @@ export default defineConfig(({ mode }) => {
             format: "iife",
             name: "AltBridgeContent",
             entryFileNames: "content.js",
-            inlineDynamicImports: true
-          }
-        }
-      }
+            inlineDynamicImports: true,
+          },
+        },
+      },
     };
   }
 
@@ -30,14 +30,14 @@ export default defineConfig(({ mode }) => {
         input: {
           popup: `${root}popup.html`,
           options: `${root}options.html`,
-          background: `${root}src/background/index.ts`
+          background: `${root}src/background/index.ts`,
         },
         output: {
           entryFileNames: "[name].js",
           chunkFileNames: "assets/[name]-[hash].js",
-          assetFileNames: "assets/[name]-[hash][extname]"
-        }
-      }
-    }
+          assetFileNames: "assets/[name]-[hash][extname]",
+        },
+      },
+    },
   };
 });

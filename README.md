@@ -1,46 +1,63 @@
 # AltBridge
 
-AltBridge generates optional, AI-assisted image descriptions without changing the original page, its HTML, or existing `alt` attributes.
+AltBridge generates optional AI-assisted image descriptions without changing the page DOM or existing `alt` attributes.
 
-## Run the MVP
+## What it does
 
-Install dependencies with Node.js 22 or later.
+- Detects and classifies page images without modifying the page.
+- Generates descriptions only after an explicit user action.
+- Uses a configurable local Ollama proxy by default.
+- Supports English and Japanese UI and prompt presets.
+- Keeps generated results separate by image, endpoint, model, prompt, and image-size setting.
+
+## Quick start
+
+Requirements: Node.js 22+, Ollama, and a vision-capable model.
 
 ```bash
 npm install
-```
-
-For normal use with Ollama, download a vision model and start the local proxy.
-
-```bash
-ollama pull llava:7b
+ollama pull gemma3:4b
 npm run ollama-proxy
 ```
 
-Build the extension in another terminal.
+In another terminal, build the extension and then load `dist` as an unpacked extension in Chrome or Edge Developer mode.
 
 ```bash
 npm run build
 ```
 
-Enable Developer mode in the Chrome or Edge extensions page, then choose **Load unpacked** and select `dist`. The default endpoint is the Ollama proxy at `http://127.0.0.1:8788`.
+The default extension endpoint is `http://127.0.0.1:8788`. Leave the model field empty to use the proxy default, `gemma3:4b`.
 
-Images are sent to the local server only after the user explicitly selects **Generate AI description**. AltBridge never changes page DOM or `alt` attributes.
+## Development
 
-The model name is optional in Settings. When it is empty, the proxy uses its default model (`llava:7b`); a supplied name is passed to Ollama as-is. The proxy sends images through Ollama’s structured `/api/chat` message format.
+```bash
+npm test
+npm run mock-server
+```
 
-The production proxy does not retain or expose submitted images for debugging.
+The mock server runs at `http://127.0.0.1:8787`. It supports the development-only `X-Mock-Confidence` header.
 
-## LAN server mode
+## Security and privacy
 
-A server on the same LAN is still network-local, but it is a separate privacy boundary because images leave the current device. AltBridge requires explicit consent and an access token for every non-loopback endpoint. The token is stored locally in the browser profile, not in sync storage.
+Images are sent only after the user selects **Generate AI description**. The default proxy binds only to `127.0.0.1`; production builds do not retain or expose submitted images for debugging.
 
-The proxy listens on `127.0.0.1` by default. To expose it to the LAN, set `HOST=0.0.0.0` and a strong `AUTH_TOKEN` in its environment. Use HTTPS or another trusted encrypted transport when the network is not fully trusted.
+A LAN server is network-local but still a separate privacy boundary because images leave the current device. AltBridge requires explicit consent and an access token for non-loopback endpoints. Tokens are stored locally in the browser profile, not in sync storage.
 
-For development only, start the mock server with `npm run mock-server`. It listens on `http://127.0.0.1:8787`; change the endpoint in Settings to use it.
+## Documentation
 
-See the [API contract](./docs/api-contract.md) for the local-server protocol and the mock-only `X-Mock-Confidence` header.
+- [Specification](./docs/spec.md)
+- [Local and LAN setup](./docs/setup.md)
+- [Local AI server API contract](./docs/api-contract.md)
+- [CI workflow](./.github/workflows/ci.yml)
+
+## AI Assistance & Tooling
+
+During the development of AltBridge, I utilized AI assistance (GPT/Codex-based tooling) to accelerate the engineering process.
+
+- **Architectural Design:** Used AI for brainstorming the proxy-based "local-first" architecture, which helped decouple the extension UI from the inference backend.
+- **Scaffolding:** Leveraged AI to generate boilerplate code for the Chrome Extension manifest, React components, and Node.js/Express server structure.
+- **Debugging & Refactoring:** Utilized AI to debug complex `multipart/form-data` buffer parsing issues and to refactor the codebase for internationalization (i18n).
 
 ## License
 
-This project is released under the [MIT License](./LICENSE).
+Released under the [MIT License](./LICENSE).

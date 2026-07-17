@@ -1,7 +1,13 @@
-export interface MultipartPayload { fields: Record<string, string>; image?: Buffer; }
+export interface MultipartPayload {
+  fields: Record<string, string>;
+  image?: Buffer;
+}
 
 export function parseMultipart(body: Buffer, contentType: string | undefined): MultipartPayload {
-  const boundary = contentType?.match(/boundary=(?:"([^"]+)"|([^;\s]+))/i)?.slice(1).find(Boolean);
+  const boundary = contentType
+    ?.match(/boundary=(?:"([^"]+)"|([^;\s]+))/i)
+    ?.slice(1)
+    .find(Boolean);
   if (!boundary) throw new Error("Missing multipart boundary");
   const marker = Buffer.from(`--${boundary}`);
   const fields: Record<string, string> = {};

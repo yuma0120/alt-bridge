@@ -103,17 +103,17 @@ Localized strings retain the same semantic meaning and accessible labels. If a r
 
 ## Confidence display
 
-| Range | UI treatment |
-| --- | --- |
-| High | “AI-generated description” |
-| Medium | “AI-generated description (some details may be uncertain)” |
-| Low | “The AI could not recognize this image reliably. Treat this as a reference only.” |
+| Range  | UI treatment                                                                      |
+| ------ | --------------------------------------------------------------------------------- |
+| High   | “AI-generated description”                                                        |
+| Medium | “AI-generated description (some details may be uncertain)”                        |
+| Low    | “The AI could not recognize this image reliably. Treat this as a reference only.” |
 
 Thresholds are configurable. The default low/high values are selected for the current provider and can be adjusted in Settings.
 
 ## Local server
 
-The extension uses the `POST /caption` contract documented in [api-contract.md](./api-contract.md). The supplied Ollama proxy defaults to `llava:7b` and can use other compatible vision models; the supplied Express mock server is only for development and integration testing.
+The extension uses the `POST /caption` contract documented in [api-contract.md](./api-contract.md). The supplied Ollama proxy defaults to `gemma3:4b` and can use other compatible vision models; the supplied Express mock server is only for development and integration testing.
 
 ## Privacy and accessibility
 
