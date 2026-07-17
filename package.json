@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && vite build --mode content",
     "test": "vitest run",
     "mock-server": "tsx mock-server/index.ts",
     "ollama-proxy": "tsx ollama-proxy/index.ts"

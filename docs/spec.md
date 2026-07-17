@@ -46,7 +46,7 @@ AltBridge generates optional AI-assisted image descriptions for web pages withou
 ### Caption generation
 
 - Generate only after a deliberate user action; automatic generation is off by default.
-- Use an editable English prompt by default.
+- Use an editable language-specific prompt preset by default.
 - Keep cached results isolated by image URL, endpoint, model, prompt, and image-size setting.
 
 ### Popup
@@ -61,9 +61,45 @@ Right-clicking an image provides **Generate AI description**.
 
 - Local server endpoint, defaulting to the Ollama proxy at `http://127.0.0.1:8788`.
 - Optional model name; an empty field uses the server default.
-- Editable English prompt.
+- Editable language-specific prompt.
 - Maximum image size before transfer.
 - Low and high confidence thresholds.
+
+## Internationalization
+
+AltBridge localizes both its UI and default caption prompt. This avoids an English-only control surface while a user expects captions in another language.
+
+### Initial languages
+
+- English (`en`)
+- Japanese (`ja`)
+
+### Language selection
+
+The language setting offers `Auto`, `English`, and `Japanese`.
+
+- `Auto` is the default and uses the browser UI language, with English as the fallback.
+- An explicit setting overrides browser detection.
+- The selected language is stored in `chrome.storage.sync`.
+- Changing the language updates localized UI strings and the built-in prompt preset.
+
+### UI strings
+
+All user-visible extension strings, including popup labels, settings, errors, classification reasons, and confidence messages, are loaded from language dictionaries. Source files must use stable message keys rather than embedding translated strings.
+
+### Caption prompts and output language
+
+Each supported language has a built-in prompt preset. A preset explicitly requests that the model return the caption in the selected language.
+
+A user-edited custom prompt is never translated or overwritten automatically. The settings UI identifies it as custom and provides an explicit action to restore the current-language preset.
+
+### Provider behavior
+
+The `CaptionProvider` request continues to send a plain `prompt` field. Providers remain language-agnostic; language selection and prompt construction belong to the extension.
+
+### Accessibility and fallback
+
+Localized strings retain the same semantic meaning and accessible labels. If a requested locale has no dictionary or prompt preset, AltBridge falls back to English without blocking caption generation.
 
 ## Confidence display
 
