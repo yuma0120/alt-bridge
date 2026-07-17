@@ -23,7 +23,7 @@ async function captionUrl(src: string, force = false): Promise<CachedCaption> {
   if (!force && cached[key]) return cached[key];
   const locale = resolveLocale(settings.language);
   const image = await fetch(src).then(async (response) => { if (!response.ok) throw new Error(t(locale, "imageFetchFailed")); return response.blob(); });
-  const result = await new LocalCaptionProvider(settings.endpoint).caption({ image, prompt: settings.prompt, maxSize: settings.maxSize, model: settings.model });
+  const result = await new LocalCaptionProvider(settings.endpoint).caption({ image, prompt: settings.prompt, maxSize: settings.maxSize, model: settings.model, authToken: settings.authToken });
   const item = { ...result, createdAt: Date.now() };
   await chrome.storage.local.set({ [CACHE_KEY]: { ...cached, [key]: item } });
   return item;
@@ -34,7 +34,8 @@ function cacheKey(src: string, settings: Awaited<ReturnType<typeof getSettings>>
 }
 async function health(): Promise<{ available: boolean }> {
   const settings = await getSettings();
-  const response = await fetch(`${settings.endpoint.replace(/\/$/, "")}/health`);
+  const headers: HeadersInit = settings.authToken ? { Authorization: `Bearer ${settings.authToken}` } : {};
+  const response = await fetch(`${settings.endpoint.replace(/\/$/, "")}/health`, { headers });
   return { available: response.ok };
 }
 async function updateContextMenu(): Promise<void> {

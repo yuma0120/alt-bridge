@@ -2,27 +2,71 @@ import type { Settings } from "./types";
 import { promptFor, resolveLocale, t } from "../i18n";
 
 export const DEFAULT_PROMPT = promptFor("en");
-const LEGACY_DEFAULT_PROMPT = new TextDecoder().decode(Uint8Array.from(atob("44GT44Gu55S75YOP44KS6KaW6Kaa6Zqc5a6z6ICF5ZCR44GR44Gr6Kqs5piO44GX44Gm44GP44Gg44GV44GE44CC5o6o5ris44Gv6YG/44GR44CB6KaL44GI44Gm44GE44KL5YaF5a6544KS5Lit5b+D44GrMTAw5paH5a2X5Lul5YaF44Gn6Kqs5piO44GX44Gm44GP44Gg44GV44GE44CC5LiN56K65a6f44Gq5aC05ZCI44Gv44CM44Cc44Go5oCd44KP44KM44G+44GZ44CN44Go6KGo54++44GX44Gm44GP44Gg44GV44GE44CC"), (char) => char.charCodeAt(0)));
-const PRE_I18N_ENGLISH_PROMPT = "Describe this image for a blind or low-vision user in 100 characters or fewer. Avoid speculation; focus on visible details. If uncertain, clearly state the uncertainty.";
-export const DEFAULT_SETTINGS: Settings = { endpoint: "http://127.0.0.1:8788", model: "", language: "auto", promptMode: "preset", prompt: DEFAULT_PROMPT, maxSize: 1600, lowConfidenceThreshold: 0.4, highConfidenceThreshold: 0.7 };
+
 const SETTINGS_KEY = "settings";
 
+export const DEFAULT_SETTINGS: Settings = {
+  endpoint: "http://127.0.0.1:8788",
+  model: "",
+  authToken: "",
+  lanConsent: false,
+  language: "auto",
+  promptMode: "preset",
+  prompt: DEFAULT_PROMPT,
+  maxSize: 1600,
+  lowConfidenceThreshold: 0.4,
+  highConfidenceThreshold: 0.7
+};
+
+/**
+ * Reads settings from storage and fills in defaults for any missing fields.
+ * This function does not write to storage. Use `resolvePromptMode` first
+ * if you need up-to-date preset/custom detection after a locale change.
+ */
 export async function getSettings(): Promise<Settings> {
-  const data = await chrome.storage.sync.get(SETTINGS_KEY);
-  const saved = data[SETTINGS_KEY] as Partial<Settings> | undefined;
-  const settings: Settings = { ...DEFAULT_SETTINGS, ...saved };
-  if (!saved?.promptMode) {
-    settings.promptMode = saved?.prompt === LEGACY_DEFAULT_PROMPT || saved?.prompt === PRE_I18N_ENGLISH_PROMPT || saved?.prompt === DEFAULT_PROMPT ? "preset" : "custom";
-  }
+  const [syncData, localData] = await Promise.all([
+    chrome.storage.sync.get(SETTINGS_KEY),
+    chrome.storage.local.get("authToken")
+  ]);
+  const saved = syncData[SETTINGS_KEY] as Partial<Settings> | undefined;
+  const authToken = typeof localData.authToken === "string" ? localData.authToken : "";
+
+  const settings: Settings = { ...DEFAULT_SETTINGS, ...saved, authToken };
+
   if (settings.promptMode === "preset") {
     settings.prompt = promptFor(resolveLocale(settings.language));
   }
-  if (!saved?.language || !saved?.promptMode || saved?.prompt === LEGACY_DEFAULT_PROMPT || saved?.prompt === PRE_I18N_ENGLISH_PROMPT) {
-    await saveSettings(settings);
-  }
+
   return settings;
 }
-export async function saveSettings(settings: Settings): Promise<void> { await chrome.storage.sync.set({ [SETTINGS_KEY]: settings }); }
+
+export async function saveSettings(settings: Settings): Promise<void> {
+  const { authToken, ...syncSettings } = settings;
+  await Promise.all([
+    chrome.storage.sync.set({ [SETTINGS_KEY]: syncSettings }),
+    chrome.storage.local.set({ authToken })
+  ]);
+}
+
+/**
+ * Determines whether a saved prompt should be treated as "preset" or "custom".
+ * A prompt counts as preset only if it exactly matches the current built-in
+ * prompt for the given language preference. Any other value is custom.
+ */
+export function resolvePromptMode(prompt: string, language: Settings["language"]): Settings["promptMode"] {
+  const currentPreset = promptFor(resolveLocale(language));
+  return prompt === currentPreset ? "preset" : "custom";
+}
+
+export function isLoopbackEndpoint(endpoint: string): boolean {
+  try {
+    const host = new URL(endpoint).hostname.toLowerCase();
+    return host === "localhost" || host === "::1" || host === "127.0.0.1";
+  } catch {
+    return false;
+  }
+}
+
 export function confidenceMessage(value: number, settings: Settings): string {
   const locale = resolveLocale(settings.language);
   if (value < settings.lowConfidenceThreshold) return t(locale, "confidenceLow");

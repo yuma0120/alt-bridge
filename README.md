@@ -29,7 +29,13 @@ Images are sent to the local server only after the user explicitly selects **Gen
 
 The model name is optional in Settings. When it is empty, the proxy uses its default model (`llava:7b`); a supplied name is passed to Ollama as-is. The proxy sends images through Ollama’s structured `/api/chat` message format.
 
-While the Ollama proxy is running, every caption request is logged with its request ID, model, image byte size, and media type. To inspect the exact in-memory image sent to Ollama, open [http://127.0.0.1:8788/debug/last-image](http://127.0.0.1:8788/debug/last-image). This debug image is replaced by the next request and is cleared when the proxy stops.
+The production proxy does not retain or expose submitted images for debugging.
+
+## LAN server mode
+
+A server on the same LAN is still network-local, but it is a separate privacy boundary because images leave the current device. AltBridge requires explicit consent and an access token for every non-loopback endpoint. The token is stored locally in the browser profile, not in sync storage.
+
+The proxy listens on `127.0.0.1` by default. To expose it to the LAN, set `HOST=0.0.0.0` and a strong `AUTH_TOKEN` in its environment. Use HTTPS or another trusted encrypted transport when the network is not fully trusted.
 
 For development only, start the mock server with `npm run mock-server`. It listens on `http://127.0.0.1:8787`; change the endpoint in Settings to use it.
 

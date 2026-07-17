@@ -119,6 +119,10 @@ The extension uses the `POST /caption` contract documented in [api-contract.md](
 
 Generated captions are supplemental information. Existing accessibility metadata is preserved, and no page content is modified. The default deployment only sends a user-selected image to the configured local endpoint.
 
+## LAN servers
+
+A LAN server is network-local but remains a separate privacy boundary because images leave the current device. Loopback endpoints are the default. A non-loopback endpoint requires user acknowledgement and an access token, which is sent as a bearer token and stored only in `chrome.storage.local`. The supplied proxy binds to loopback by default; LAN exposure requires `HOST=0.0.0.0` and `AUTH_TOKEN`. Production builds do not expose debug images or request-detail logs.
+
 ## Server unavailable behavior
 
 If the extension cannot reach the configured local server, it disables caption-generation controls, avoids disruptive errors, and directs the user to Settings and setup documentation.

@@ -10,7 +10,9 @@ export class LocalCaptionProvider implements CaptionProvider {
     if (request.maxSize) form.append("maxSize", String(request.maxSize));
     if (request.model?.trim()) form.append("model", request.model.trim());
     form.append("requestId", crypto.randomUUID());
-    const response = await fetch(`${this.endpoint.replace(/\/$/, "")}/caption`, { method: "POST", body: form, headers: { Accept: "application/json" } });
+    const headers: HeadersInit = { Accept: "application/json" };
+    if (request.authToken?.trim()) headers.Authorization = `Bearer ${request.authToken.trim()}`;
+    const response = await fetch(`${this.endpoint.replace(/\/$/, "")}/caption`, { method: "POST", body: form, headers });
     const payload: unknown = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(errorMessage(payload) || `Local AI server returned HTTP ${response.status}`);
     if (!isCaptionResponse(payload)) throw new Error("The local AI server returned an invalid response");
