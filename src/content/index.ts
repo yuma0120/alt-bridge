@@ -20,8 +20,7 @@ export function classifyAlt(
   if (role === "presentation" || ariaHidden === "true")
     return { category: "excluded", reason: t(locale, "decorative") };
   if (inSvg || isFavicon) return { category: "excluded", reason: t(locale, "svgOrFavicon") };
-  if (naturalWidth <= 16 && naturalHeight <= 16)
-    return { category: "excluded", reason: t(locale, "smallIcon") };
+  if (naturalWidth <= 16 && naturalHeight <= 16) return { category: "excluded", reason: t(locale, "smallIcon") };
   if (alt === null) return { category: "missing-alt", reason: t(locale, "noAlt") };
   if (alt === "") return { category: "empty-alt", reason: t(locale, "maybeDecorative") };
   if (alt.length < 3 || genericAlt.test(alt) || filenameAlt.test(alt) || urlAlt.test(alt))
@@ -42,7 +41,6 @@ function categoryFor(image: HTMLImageElement, locale: SupportedLocale): Pick<Ima
   );
 }
 
-
 function collectImages(locale: SupportedLocale): ImageRecord[] {
   return [...document.images]
     .filter((image) => Boolean(image.currentSrc || image.src))
@@ -61,5 +59,3 @@ chrome.runtime.onMessage.addListener((message: { type: string }, _sender, sendRe
   getSettings().then((settings) => sendResponse({ images: collectImages(resolveLocale(settings.language)) }));
   return true;
 });
-
-

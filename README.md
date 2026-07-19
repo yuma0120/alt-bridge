@@ -49,6 +49,7 @@ A LAN server is network-local but still a separate privacy boundary because imag
 - [Local and LAN setup](./docs/setup.md)
 - [Local AI server API contract](./docs/api-contract.md)
 - [CI workflow](./.github/workflows/ci.yml)
+- [Japanese README](./docs/README.ja.md)
 
 ## AI Assistance & Tooling
 
@@ -60,4 +61,5 @@ During the development of AltBridge, I utilized AI assistance (GPT/Codex-based t
 
 ## License
 
-Released under the [MIT License](./LICENSE).
+AltBridge is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](./LICENSE).
+The goal is to ensure that improvements to this accessibility-focused project remain available to the community, including deployments over a network.
