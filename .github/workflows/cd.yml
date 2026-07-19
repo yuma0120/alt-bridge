@@ -1,0 +1,49 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      - run: npm run build
+
+      - name: Include LICENSE and repo link in distributable
+        run: |
+          cp LICENSE dist/
+          cat > dist/SOURCE.txt <<EOF
+          AltBridge ${{ github.ref_name }}
+
+          License: GNU Affero General Public License v3.0 (AGPL-3.0)
+
+          Source code:
+          https://github.com/yuma0120/alt-bridge
+          EOF
+
+      - name: Zip extension
+        run: |
+          cd dist
+          zip -r ../alt-bridge-${{ github.ref_name }}.zip .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: alt-bridge-${{ github.ref_name }}.zip
+          generate_release_notes: true
