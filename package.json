@@ -9,17 +9,21 @@
     "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "lint": "eslint .",
     "mock-server": "tsx mock-server/index.ts",
     "ollama-proxy": "tsx ollama-proxy/index.ts"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/chrome": "^0.0.276",
     "@types/express": "^5.0.1",
     "@types/node": "^22.13.1",
+    "eslint": "^10.7.0",
     "express": "^5.1.0",
     "prettier": "^3.5.3",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
+    "typescript-eslint": "^8.64.0",
     "vite": "^6.1.0",
     "vitest": "^3.0.7"
   }
