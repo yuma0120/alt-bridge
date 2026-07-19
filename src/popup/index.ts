@@ -53,7 +53,7 @@ function render(images: ImageRecord[], available: boolean, settings: Settings, l
 }
 
 function card(image: ImageRecord, locale: SupportedLocale): string {
-  return `<article><img src="${escape(image.src)}" alt="" /><div><strong>${label(image.category, locale)}</strong><p>${escape(image.reason)}</p><p class=alt>alt: ${escape(image.alt ?? t(locale, "missingAltValue"))}</p><button data-src="${escapeAttr(image.src)}">${t(locale, "generate")}</button><p class=result aria-live="polite"></p></div></article>`;
+  return `<article><img src="${escapeAttr(image.src)}" alt="" /><div><strong>${label(image.category, locale)}</strong><p>${escape(image.reason)}</p><p class=alt>alt: ${escape(image.alt ?? t(locale, "missingAltValue"))}</p><button data-src="${escapeAttr(image.src)}">${t(locale, "generate")}</button><p class=result aria-live="polite"></p></div></article>`;
 }
 function label(category: ImageCategory, locale: SupportedLocale): string {
   const key: Record<ImageCategory, "missingAlt" | "emptyAlt" | "suspiciousAlt" | "validAlt" | "excluded"> = {

@@ -7,7 +7,7 @@ const NO_IMAGE_PATTERN =
   /(?:please provide (?:the )?image|no image (?:was )?(?:provided|attached)|i (?:cannot|can’t|can not) (?:see|view)|unable to (?:see|view)|cannot access (?:the )?image)/i;
 const UNCERTAINTY_PATTERN = /\b(?:may|might|possibly|appears?|seems?|unclear|unsure|cannot determine)\b/gi;
 const VISUAL_DETAIL_PATTERN =
-  /\b(?:man|woman|person|people|child|dog|cat|car|building|tree|street|table|room|sky|water|food|text|logo|photo|image|scene|red|blue|green|black|white)\b/i;
+  /\b(?:man|woman|person|people|child|dog|cat|car|building|tree|street|table|room|sky|water|food|text|logo|photo|image|scene|red|blue|green|black|white)\b|(?:男性|女性|人|子供|犬|猫|車|建物|木|道路|テーブル|部屋|空|水|食べ物|テキスト|ロゴ|写真|画像|シーン|赤|青|緑|黒|白)/i;
 
 export function estimateCaptionConfidence(caption: string): HeuristicConfidence {
   const text = caption.trim();

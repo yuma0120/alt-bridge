@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, getSettings, isLoopbackEndpoint, saveSettings } from "../shared/core";
+import { DEFAULT_SETTINGS, getSettings, isLoopbackEndpoint, saveSettings, validateSettings } from "../shared/core";
 import { promptFor, resolveLocale, t } from "../i18n";
 import type { LanguagePreference, Settings } from "../shared/types";
 import "./style.css";
@@ -52,7 +52,7 @@ function render(settings: Settings): void {
       lowConfidenceThreshold: Number(values.lowConfidenceThreshold),
       highConfidenceThreshold: Number(values.highConfidenceThreshold),
     };
-    if (!valid(value)) return status(t(locale, "invalidSettings"));
+    if (!validateSettings(value)) return status(t(locale, "invalidSettings"));
     if (!isLoopbackEndpoint(value.endpoint) && (!value.lanConsent || !value.authToken))
       return status(t(locale, "invalidLan"));
     await saveSettings(value);
@@ -61,18 +61,6 @@ function render(settings: Settings): void {
   };
   app.querySelector<HTMLButtonElement>("#restore-defaults")!.onclick = () =>
     render({ ...DEFAULT_SETTINGS, prompt: promptFor(resolveLocale(DEFAULT_SETTINGS.language)) });
-}
-function valid(settings: Settings): boolean {
-  return (
-    settings.model.length <= 100 &&
-    settings.prompt.length > 0 &&
-    Number.isInteger(settings.maxSize) &&
-    settings.maxSize >= 64 &&
-    settings.maxSize <= 8192 &&
-    settings.lowConfidenceThreshold >= 0 &&
-    settings.highConfidenceThreshold <= 1 &&
-    settings.lowConfidenceThreshold < settings.highConfidenceThreshold
-  );
 }
 function selected(value: string, option: string): string {
   return value === option ? " selected" : "";

@@ -61,7 +61,7 @@ export function resolvePromptMode(prompt: string, language: Settings["language"]
 export function isLoopbackEndpoint(endpoint: string): boolean {
   try {
     const host = new URL(endpoint).hostname.toLowerCase();
-    return host === "localhost" || host === "::1" || host === "127.0.0.1";
+    return host === "localhost" || host === "::1" || host === "[::1]" || host === "127.0.0.1";
   } catch {
     return false;
   }
@@ -72,4 +72,21 @@ export function confidenceMessage(value: number, settings: Settings): string {
   if (value < settings.lowConfidenceThreshold) return t(locale, "confidenceLow");
   if (value < settings.highConfidenceThreshold) return t(locale, "confidenceMedium");
   return t(locale, "confidenceHigh");
+}
+
+/**
+ * オプションフォームの入力値が有効かどうか検証する。
+ * DOM に依存しないため、テストから直接呼び出せる。
+ */
+export function validateSettings(settings: Settings): boolean {
+  return (
+    settings.model.length <= 100 &&
+    settings.prompt.length > 0 &&
+    Number.isInteger(settings.maxSize) &&
+    settings.maxSize >= 64 &&
+    settings.maxSize <= 8192 &&
+    settings.lowConfidenceThreshold >= 0 &&
+    settings.highConfidenceThreshold <= 1 &&
+    settings.lowConfidenceThreshold < settings.highConfidenceThreshold
+  );
 }
