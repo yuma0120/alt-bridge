@@ -22,34 +22,95 @@ async function start(): Promise<void> {
 }
 
 function render(images: ImageRecord[], available: boolean, settings: Settings, locale: SupportedLocale): void {
-  app.innerHTML = `<header><h1>AltBridge</h1><button id="settings">${t(locale, "settings")}</button></header>${available ? "" : `<p class=notice>${t(locale, "serverUnavailable")}</p>`}<p class=count>${t(locale, "imageCount", { count: images.length })}</p><section>${images.map((image) => card(image, locale)).join("") || `<p>${t(locale, "noImages")}</p>`}</section>`;
+  const unique = uniqueImages(images);
+  const groups = [
+    { title: "needsAttention" as const, categories: ["missing-alt", "suspicious-alt"] as ImageCategory[] },
+    { title: "possiblyDecorative" as const, categories: ["empty-alt"] as ImageCategory[] },
+    { title: "altAlreadyPresent" as const, categories: ["valid-alt"] as ImageCategory[] },
+  ];
+  const content = groups
+    .map((group) => {
+      const groupImages = unique.filter((image) => group.categories.includes(image.category));
+      if (!groupImages.length) return "";
+      return `<section class="image-group"><h2>${t(locale, group.title)}</h2>${groupImages.map((image) => card(image, locale)).join("")}</section>`;
+    })
+    .join("");
+  app.innerHTML = `<header><h1>AltBridge</h1><button id="settings">${t(locale, "settings")}</button></header>${available ? "" : `<p class=notice>${t(locale, "serverUnavailable")}</p>`}<p class=count>${t(locale, "imageCount", { count: unique.length })}</p>${content || `<p>${t(locale, "noImages")}</p>`}`;
   document.querySelector<HTMLButtonElement>("#settings")!.onclick = () => chrome.runtime.openOptionsPage();
-  document.querySelectorAll<HTMLButtonElement>("[data-src]").forEach(
-    (button) =>
-      (button.onclick = async () => {
-        button.disabled = true;
-        button.textContent = t(locale, "generating");
-        const result = (await chrome.runtime.sendMessage({
-          type: "captionUrl",
-          src: button.dataset.src,
-          force: true,
-        })) as CachedCaption & { error?: string };
-        const target = button.parentElement!.querySelector<HTMLElement>(".result")!;
-        if (result.error) {
-          target.textContent = result.error;
-        } else {
-          const source =
-            result.confidenceSource === "heuristic" ? t(locale, "heuristicEstimate") : t(locale, "providerConfidence");
-          target.textContent =
-            result.caption + "\n" + confidenceMessage(result.confidence, settings) + " (" + source + ")";
-          target.title = result.confidenceReasons?.join(" ") ?? "";
-        }
-        button.textContent = t(locale, "generateAgain");
-        button.disabled = false;
-      }),
-  );
+  document.querySelectorAll<HTMLButtonElement>("[data-src]").forEach((button) => {
+    const src = button.dataset.src!;
+    button.onclick = () => void generateCaption(button, src, settings, locale);
+    void showCachedCaption(button, src, settings, locale);
+  });
   if (!available)
     document.querySelectorAll<HTMLButtonElement>("[data-src]").forEach((button) => (button.disabled = true));
+}
+
+function uniqueImages(images: ImageRecord[]): ImageRecord[] {
+  const seen = new Set<string>();
+  return images.filter((image) => {
+    const key = `${image.category}\n${image.src}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+async function generateCaption(
+  button: HTMLButtonElement,
+  src: string,
+  settings: Settings,
+  locale: SupportedLocale,
+): Promise<void> {
+  button.disabled = true;
+  button.textContent = t(locale, "generating");
+  const result = (await chrome.runtime.sendMessage({ type: "captionUrl", src, force: true })) as CachedCaption & {
+    error?: string;
+  };
+  showCaption(button, result, settings, locale);
+  button.textContent = t(locale, "generateAgain");
+  button.disabled = false;
+}
+
+async function showCachedCaption(
+  button: HTMLButtonElement,
+  src: string,
+  settings: Settings,
+  locale: SupportedLocale,
+): Promise<void> {
+  const status = (await chrome.runtime.sendMessage({ type: "getCachedCaption", src })) as {
+    caption?: CachedCaption;
+    generating: boolean;
+  };
+  if (status.caption) {
+    showCaption(button, status.caption, settings, locale);
+    button.textContent = t(locale, "generateAgain");
+  }
+  if (status.generating) {
+    button.disabled = true;
+    button.textContent = t(locale, "generating");
+    window.setTimeout(() => void showCachedCaption(button, src, settings, locale), 500);
+  } else if (button.textContent === t(locale, "generating")) {
+    button.disabled = false;
+  }
+}
+
+function showCaption(
+  button: HTMLButtonElement,
+  result: CachedCaption & { error?: string },
+  settings: Settings,
+  locale: SupportedLocale,
+): void {
+  const target = button.parentElement!.querySelector<HTMLElement>(".result")!;
+  if (result.error) {
+    target.textContent = result.error;
+    target.title = "";
+    return;
+  }
+  const source =
+    result.confidenceSource === "heuristic" ? t(locale, "heuristicEstimate") : t(locale, "providerConfidence");
+  target.textContent = result.caption + "\n" + confidenceMessage(result.confidence, settings) + " (" + source + ")";
+  target.title = result.confidenceReasons?.join(" ") ?? "";
 }
 
 function card(image: ImageRecord, locale: SupportedLocale): string {

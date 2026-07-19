@@ -44,4 +44,7 @@ export interface CachedCaption extends CaptionResponse {
   createdAt: number;
 }
 export type ExtensionMessage =
-  { type: "getImages" } | { type: "captionUrl"; src: string; force?: boolean } | { type: "health" };
+  | { type: "getImages" }
+  | { type: "captionUrl"; src: string; force?: boolean }
+  | { type: "getCachedCaption"; src: string }
+  | { type: "health" };
